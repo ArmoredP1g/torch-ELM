@@ -1,10 +1,10 @@
-from data_process import read_SVC_data, split_dataset
-from eval import evaluation
-from visualization import *
-from elm import ELM, TELM
+from src.data_process import read_SVC_data, split_dataset
+from src.eval import evaluation
+from src.visualization import *
+from src.elm import ELM, TELM
 
 if __name__ == '__main__':
-    data, target = read_SVC_data("C:\\Users\\29147\\Documents\\WeChat Files\\wxid_7301883019012\\FileStorage\\File\\2023-05\\原始数据.xlsx")
+    data, target = read_SVC_data("C:\\Users\\29147\\Documents\\WeChat Files\\wxid_7301883019012\\FileStorage\\File\\2023-05\\原始数据.xlsx", index=True)
     train_data, train_gt, val_data, val_gt = split_dataset(data, target, 5)
 
     mae_elm = [[],[]]
@@ -13,8 +13,8 @@ if __name__ == '__main__':
     r2_telm = [[],[]]
 
 
-    hidden_size_start = 1000
-    hidden_size_end = 8000
+    hidden_size_start = 10
+    hidden_size_end = 100
 
 
     hidden_size_cur = hidden_size_start
@@ -26,8 +26,8 @@ if __name__ == '__main__':
 
 
         # 创建elm模型对象
-        model_elm = ELM(input_dim=973, hidden_dim=hidden_size_cur, output_dim=1)
-        model_telm = TELM(input_dim=973, hidden_dim=hidden_size_cur, output_dim=1)
+        model_elm = ELM(input_dim=4225, hidden_dim=hidden_size_cur, output_dim=1)
+        model_telm = TELM(input_dim=4225, hidden_dim=hidden_size_cur, output_dim=1)
         # 训练
         model_elm.fit(train_data, train_gt)
         model_telm.fit(train_data, train_gt)
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         r2_telm[1].append(r2)
         
         # 设置间隔为200
-        hidden_size_cur += 500
+        hidden_size_cur += 1
 
     # 画图
     plot_mae_r2(mae_elm, r2_elm, mae_telm, r2_telm)

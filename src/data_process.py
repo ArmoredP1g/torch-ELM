@@ -1,15 +1,34 @@
 import torch
 import pandas as pd
+import torch.nn as nn
 
-def read_SVC_data(file_path):
+def read_SVC_data(file_path, index=False, norm=True):
     df = pd.read_excel(file_path, header=None)
     data = torch.tensor(df.iloc[2:].values.astype(float), dtype=torch.float32)
     target = torch.tensor(df.iloc[1].values.astype(float), dtype=torch.float32).unsqueeze(1)
+
+    if index:
+        avg_pool = nn.AvgPool1d(15,15,1)
+        data = data.transpose(0,1)
+        pooled_data = avg_pool(data.unsqueeze(1)).squeeze(1)
+        NDI = (pooled_data.unsqueeze(1)-pooled_data.unsqueeze(2))/(pooled_data.unsqueeze(1)+pooled_data.unsqueeze(2)+1e-5)
+        NRI = pooled_data.unsqueeze(1)/(pooled_data.unsqueeze(2)+pooled_data.unsqueeze(1)+1e-5)      # The division operation results in 
+                                                                        # a wide range of RI values, +self in the denominator to 
+                                                                        # stabilizes the model performance
+
+        NDI = torch.tril(NDI)
+        NRI = torch.triu(NRI)
+        INDEX = NDI + NRI
+        return INDEX.view(-1, 65 ** 2), target
+
     # min-max normalization
     data_min = torch.min(data, dim=0)[0]
     data_max = torch.max(data, dim=0)[0]
     data_norm = (data - data_min) / (data_max - data_min)
-    return data_norm.transpose(0,1), target
+    if not norm:
+        return data.transpose(0,1), target
+    else:
+        return data_norm.transpose(0,1), target
 
 
 
